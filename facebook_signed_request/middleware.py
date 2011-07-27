@@ -19,6 +19,7 @@ class SignedRequestMiddleware(object):
                 raw_signature, payload = request.POST['signed_request'].split('.', 1)
                 signature = self.decode_data(raw_signature)
                 data = json.loads(self.decode_data(payload))
+                self.verify_signature(data, payload, signature)
                 self.validate_time(data['issued_at'])
                 request.facebook = data
             except ValueError: # json loads & split
@@ -39,3 +40,14 @@ class SignedRequestMiddleware(object):
         now = time.time()
         if timestamp + EXPIRATION_TIME < now:
             raise SignedRequestException('"signed_request" expired')
+
+    def verify_signature(self, data, payload, signature):
+        def get_algorithm(name):
+            name = name.lower()
+            if name[:5] != "hmac-" or name[5:] not in hashlib.algorithms:
+                raise Exception('Unsupported hash algorithm')
+            return getattr(hashlib, name[5:])
+
+        expected = hmac.new(settings.FACEBOOK_APP_SECRET, payload, get_algorithm(data['algorithm'])).digest()
+        if expected != signature:
+            raise Exception('Wrong signature')
