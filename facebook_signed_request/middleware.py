@@ -1,6 +1,9 @@
 import base64
+import hashlib
+import hmac
 import time
 
+from django.conf import settings
 from django.http import QueryDict
 from django.utils import simplejson as json
 import logging
@@ -24,7 +27,6 @@ class SignedRequestMiddleware(object):
                 request.facebook = data
             except ValueError: # json loads & split
                 logger.error('"signed_request" is invalid json string')
-                pass
             except TypeError: # base64 decode
                 logger.error('Cannot decode "signed_request"')
             except SignedRequestException as exception:
@@ -45,9 +47,9 @@ class SignedRequestMiddleware(object):
         def get_algorithm(name):
             name = name.lower()
             if name[:5] != "hmac-" or name[5:] not in hashlib.algorithms:
-                raise Exception('Unsupported hash algorithm')
+                raise SignedRequestException('Unsupported hash algorithm')
             return getattr(hashlib, name[5:])
 
         expected = hmac.new(settings.FACEBOOK_APP_SECRET, payload, get_algorithm(data['algorithm'])).digest()
         if expected != signature:
-            raise Exception('Wrong signature')
+            raise SignedRequestException('Wrong signature')
