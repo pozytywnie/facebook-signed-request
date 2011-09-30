@@ -3,7 +3,7 @@ from distutils.core import setup
 
 setup(
     name='facebook-signed-request',
-    version='0.1',
+    version='1.0',
     maintainer="Tomasz Wysocki",
     maintainer_email="tomasz@wysocki.info",
     install_requires=(
