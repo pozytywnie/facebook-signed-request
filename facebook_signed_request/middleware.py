@@ -2,11 +2,12 @@ import base64
 import hashlib
 import hmac
 import time
+import logging
 
 from django.conf import settings
+from django.contrib.auth import logout, authenticate, login
 from django.http import QueryDict
 from django.utils import simplejson as json
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -53,3 +54,31 @@ class SignedRequestMiddleware(object):
         expected = hmac.new(settings.FACEBOOK_APP_SECRET, payload, get_algorithm(data['algorithm'])).digest()
         if expected != signature:
             raise SignedRequestException('Wrong signature')
+
+class FacebookLoginMiddleware(object):
+    def process_request(self, request):
+        # this import is not at beggining, because we don't want to make dependencies on whole app, but only on this class
+        # if programmer uses facebook_signed_request.FacebookLoginMiddleware without facebook_auth
+        # he will get import exception
+        from facebook_auth.models import FacebookUser
+        if hasattr(request, 'facebook'):
+            fb_data = request.facebook
+            if not 'user' in fb_data and isinstance(request.user, FacebookUser):
+                logout(request)
+            if 'user' in fb_data:
+                self.login_user(request, fb_data)
+
+    def login_user(self, request, fb_data):
+        if not self.users_match(fb_data, request.user):
+            if request.user.is_authenticated():
+                logout(request)
+            self.login_by_facebook_data(request, fb_data)
+
+    def users_match(self, fb_user, user):
+        return user.is_authenticated() and fb_user['oauth_token'] == user.access_token
+
+    def login_by_facebook_data(self, request, fb_user):
+        user = authenticate(access_token=fb_user['oauth_token'])
+        if user:
+            login(request, user)
+
