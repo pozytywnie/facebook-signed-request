@@ -76,7 +76,7 @@ class FacebookLoginMiddleware(object):
                 self.login_by_facebook_data(request, fb_data)
 
     def users_match(self, fb_user, user):
-        return user.is_authenticated() and fb_user['oauth_token'] == user.access_token
+        return user.is_authenticated() and hasattr(user, 'access_token') and fb_user['oauth_token'] == user.access_token
 
     def login_by_facebook_data(self, request, fb_user):
         user = authenticate(access_token=fb_user['oauth_token'])
