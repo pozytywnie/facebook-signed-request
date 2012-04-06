@@ -65,7 +65,6 @@ class FacebookLoginMiddleware(object):
             fb_data = request.facebook
             if not 'user' in fb_data and isinstance(request.user, FacebookUser):
                 logout(request)
-            if 'user' in fb_data:
                 self.login_user(request, fb_data)
 
     def login_user(self, request, fb_data):
