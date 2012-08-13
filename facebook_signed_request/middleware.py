@@ -6,6 +6,7 @@ import logging
 
 from django.conf import settings
 from django.contrib.auth import logout, authenticate, login
+from django.db.models import get_model
 from django.http import QueryDict
 from django.utils import simplejson as json
 
@@ -57,14 +58,9 @@ class SignedRequestMiddleware(object):
 
 class FacebookLoginMiddleware(object):
     def process_request(self, request):
-        # this import is not at beggining, because we don't want to make dependencies on whole app, but only on this class
-        # if programmer uses facebook_signed_request.FacebookLoginMiddleware without facebook_auth
-        # he will get import exception
-        from facebook_auth.models import FacebookUser
         if hasattr(request, 'facebook'):
             fb_data = request.facebook
-            if not 'user' in fb_data and isinstance(request.user, FacebookUser):
-                logout(request)
+            if not isinstance(request.user, get_model('facebook_auth', 'FacebookUser')):
                 self.login_user(request, fb_data)
 
     def login_user(self, request, fb_data):
