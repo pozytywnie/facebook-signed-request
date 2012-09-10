@@ -1,11 +1,13 @@
 import base64
 import hashlib
 import hmac
-import time
 import logging
+import time
 
 from django.conf import settings
-from django.contrib.auth import logout, authenticate, login
+from django.contrib.auth import authenticate
+from django.contrib.auth import login
+from django.contrib.auth import logout
 from django.db.models import get_model
 from django.http import QueryDict
 from django.utils import simplejson as json
@@ -77,4 +79,3 @@ class FacebookLoginMiddleware(object):
         user = authenticate(access_token=fb_user['oauth_token'])
         if user:
             login(request, user)
-
