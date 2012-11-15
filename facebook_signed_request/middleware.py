@@ -56,7 +56,8 @@ class SignedRequestMiddleware(object):
 
         expected = hmac.new(settings.FACEBOOK_APP_SECRET, payload, get_algorithm(data['algorithm'])).digest()
         if expected != signature:
-            raise SignedRequestException('Wrong signature')
+            debug = {'expected': expected, 'gotten': signature, 'payload': payload, 'data': data}
+            raise SignedRequestException('Wrong signature', debug)
 
 class FacebookLoginMiddleware(object):
     def process_request(self, request):
