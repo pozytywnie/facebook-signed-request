@@ -27,14 +27,14 @@ class SignedRequestMiddleware(object):
                 signature = self.decode_data(raw_signature)
                 data = json.loads(self.decode_data(payload))
                 self.verify_signature(data, payload, signature)
-                self.validate_time(data['issued_at'])
+                self.validate_time(data['expires'])
                 request.facebook = data
             except ValueError: # json loads & split
                 logger.error('"signed_request" is invalid json string')
             except TypeError: # base64 decode
                 logger.error('Cannot decode "signed_request"')
             except SignedRequestException as exception:
-                logger.error(exception.message)
+                logger.exception(exception)
             request.POST = QueryDict('')
             request.method = 'GET'
 
@@ -44,7 +44,7 @@ class SignedRequestMiddleware(object):
 
     def validate_time(self, timestamp):
         now = time.time()
-        if timestamp + EXPIRATION_TIME < now:
+        if timestamp < now:
             raise SignedRequestException('"signed_request" expired')
 
     def verify_signature(self, data, payload, signature):
