@@ -14,7 +14,6 @@ from django.utils import simplejson as json
 
 logger = logging.getLogger(__name__)
 
-EXPIRATION_TIME = 5 * 60
 
 class SignedRequestException(Exception):
     pass
@@ -27,7 +26,6 @@ class SignedRequestMiddleware(object):
                 signature = self.decode_data(raw_signature)
                 data = json.loads(self.decode_data(payload))
                 self.verify_signature(data, payload, signature)
-                self.validate_time(data['expires'])
                 request.facebook = data
             except ValueError: # json loads & split
                 logger.error('"signed_request" is invalid json string')
@@ -41,11 +39,6 @@ class SignedRequestMiddleware(object):
     def decode_data(self, data):
         padding = "=" * ((4 - len(data) % 4) % 4)
         return base64.urlsafe_b64decode(str(data) + padding)
-
-    def validate_time(self, timestamp):
-        now = time.time()
-        if timestamp < now:
-            raise SignedRequestException('"signed_request" expired')
 
     def verify_signature(self, data, payload, signature):
         def get_algorithm(name):
