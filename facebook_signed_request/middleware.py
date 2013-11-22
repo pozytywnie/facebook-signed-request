@@ -66,9 +66,11 @@ class SignedRequestParser(object):
 
     def _split_signed_request(self):
         try:
-            return self.signed_request.split('.', 1)
+            raw_signature, payload = self.signed_request.split('.', 1)
         except ValueError:
             raise SignedRequestException('Cannot split signature and payload')
+        else:
+            return raw_signature, payload
 
     def _decode_signature(self, raw_signature):
         try:
