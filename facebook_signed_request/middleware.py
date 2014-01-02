@@ -1,6 +1,7 @@
 import base64
 import hashlib
 import hmac
+import json
 import logging
 import time
 
@@ -10,7 +11,6 @@ from django.contrib.auth import login
 from django.contrib.auth import logout
 from django.db.models import get_model
 from django.http import QueryDict
-from django.utils import simplejson as json
 
 logger = logging.getLogger(__name__)
 
