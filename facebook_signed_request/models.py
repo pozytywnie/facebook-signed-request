@@ -1,6 +1,9 @@
 from django.conf import settings
 from django.core import exceptions
 
+from facebook_signed_request import compat
+
+
 def validate():
     """ Check occurrence of following constants in settings:
 
@@ -14,7 +17,7 @@ def validate():
             "To work with Facebook provide %s in settings.py." % SECRET_VAR
         )
     id = getattr(settings, SECRET_VAR)
-    if not isinstance(id, basestring):
+    if not isinstance(id, compat.str_class):
         raise exceptions.ImproperlyConfigured(
             "%s must be string, but is %s" % (SECRET_VAR, id.__class__.__name__)
         )

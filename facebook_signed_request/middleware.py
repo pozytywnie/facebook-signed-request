@@ -1,9 +1,7 @@
 import base64
-import hashlib
 import hmac
 import json
 import logging
-import time
 
 from django.conf import settings
 from django.contrib.auth import authenticate
@@ -11,6 +9,8 @@ from django.contrib.auth import login
 from django.contrib.auth import logout
 from django.db.models import get_model
 from django.http import QueryDict
+
+from facebook_signed_request import compat
 
 logger = logging.getLogger(__name__)
 
@@ -85,22 +85,31 @@ class SignedRequestParser(object):
             raise SignedRequestException('Cannot base64 decode data')
         else:
             try:
+                if not compat.IS_PYTHON2:
+                    decoded = decoded.decode('utf-8')
                 return json.loads(decoded)
             except ValueError:
                 raise SignedRequestException('Invalid json')
 
     def _decode_data(self, data):
         padding = "=" * ((4 - len(data) % 4) % 4)
-        return base64.urlsafe_b64decode(str(data) + padding)
+        if compat.IS_PYTHON2:
+            data = str(data)
+        return base64.urlsafe_b64decode(data + padding)
 
     def verify_signature(self, data, payload, signature):
         def get_algorithm(name):
             name = name.lower()
-            if name[:5] != "hmac-" or name[5:] not in hashlib.algorithms:
+            if name[:5] != "hmac-" or name[5:] not in compat.hashlib.algorithms_available:
                 raise SignedRequestException('Unsupported hash algorithm')
-            return getattr(hashlib, name[5:])
+            return getattr(compat.hashlib, name[5:])
 
-        expected = hmac.new(settings.FACEBOOK_APP_SECRET, payload, get_algorithm(data['algorithm'])).digest()
+        secret = settings.FACEBOOK_APP_SECRET
+        if not compat.IS_PYTHON2:
+            secret = bytes(secret, 'utf-8')
+            payload = bytes(payload, 'utf-8')
+
+        expected = hmac.new(secret, payload, get_algorithm(data['algorithm'])).digest()
         if expected != signature:
             debug = {'expected': expected, 'gotten': signature, 'payload': payload, 'data': data}
             raise SignedRequestException('Wrong signature', debug)
