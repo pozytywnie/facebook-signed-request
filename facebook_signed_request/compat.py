@@ -18,7 +18,7 @@ class LibWrapper(object):
 if IS_PYTHON2:
     class HashLibWrapper(LibWrapper):
         __lib = _hashlib
-        algorithms_avaliable = _hashlib.algorithms
+        algorithms_available = _hashlib.algorithms
     hashlib = HashLibWrapper()
 else:
     hashlib = _hashlib
