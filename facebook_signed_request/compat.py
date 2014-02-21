@@ -9,16 +9,13 @@ else:
     str_class = str
 
 
-class LibWrapper(object):
-    __lib = None
-
-    def getattr(self, attr):
-        return getattr(self.lib, attr)
-
 if IS_PYTHON2:
-    class HashLibWrapper(LibWrapper):
-        __lib = _hashlib
+    class HashLibWrapper(object):
         algorithms_available = _hashlib.algorithms
+
+        def __getattr__(self, attr):
+            return getattr(_hashlib, attr)
+
     hashlib = HashLibWrapper()
 else:
     hashlib = _hashlib
