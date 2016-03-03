@@ -3,11 +3,11 @@ import hmac
 import json
 import logging
 
+from django.apps.registry import apps
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.contrib.auth import login
 from django.contrib.auth import logout
-from django.db.models import get_model
 from django.http import QueryDict
 
 from facebook_signed_request import compat
@@ -34,7 +34,7 @@ class FacebookLoginMiddleware(object):
     def process_request(self, request):
         if hasattr(request, 'facebook'):
             fb_data = request.facebook
-            if not isinstance(request.user, get_model('facebook_auth', 'FacebookUser')):
+            if not isinstance(request.user, apps.get_model('facebook_auth', 'FacebookUser')):
                 self.login_user(request, fb_data)
 
     def login_user(self, request, fb_data):
