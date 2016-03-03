@@ -7,7 +7,7 @@ setup(
     maintainer="Tomasz Wysocki",
     maintainer_email="tomasz@wysocki.info",
     install_requires=(
-        'django',
+        'django>=1.7.1',
     ),
     packages=[
         'facebook_signed_request',
